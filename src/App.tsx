@@ -34,6 +34,8 @@ interface ScopeSection {
 interface ContractData {
   domName: string;
   subName: string;
+  domToSubTitles: string[];
+  subToDomTitles: string[];
   startDate: string;
   endDate: string;
   agreementStatus: AgreementStatus;
@@ -319,6 +321,8 @@ function createDefaultContractData(): ContractData {
   return {
     domName: "",
     subName: "",
+    domToSubTitles: [],
+    subToDomTitles: [],
     startDate: formatDateTimeInput(start),
     endDate: formatDateTimeInput(end),
     agreementStatus: "草拟中",
@@ -536,6 +540,8 @@ function App() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [terminateArmed, setTerminateArmed] = useState(false);
   const [signingPhase, setSigningPhase] = useState<SigningPhase>("idle");
+  const [domToSubTitleDraft, setDomToSubTitleDraft] = useState("");
+  const [subToDomTitleDraft, setSubToDomTitleDraft] = useState("");
   const signedVisualState = contract.isLocked || signingPhase === "done";
 
   useEffect(() => {
@@ -543,7 +549,18 @@ function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved) as ContractData;
-        setContract({ ...createDefaultContractData(), ...parsed });
+        const legacyMutualTitles = (parsed as { mutualTitles?: string[] })
+          .mutualTitles;
+        setContract({
+          ...createDefaultContractData(),
+          ...parsed,
+          domToSubTitles:
+            parsed.domToSubTitles ??
+            (Array.isArray(legacyMutualTitles) ? legacyMutualTitles : []),
+          subToDomTitles:
+            parsed.subToDomTitles ??
+            (Array.isArray(legacyMutualTitles) ? legacyMutualTitles : []),
+        });
       } catch {
         localStorage.removeItem(STORAGE_KEY);
       }
@@ -790,6 +807,46 @@ function App() {
     }));
   }
 
+  function appendTitleRulesFromRaw(
+    key: "domToSubTitles" | "subToDomTitles",
+    raw: string,
+  ): void {
+    if (contract.isLocked || contract.agreementStatus === "已终止") {
+      return;
+    }
+    const tokens = raw
+      .split(/[,\n，;；|]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+    if (tokens.length === 0) {
+      return;
+    }
+    setContract((prev) => {
+      const exists = new Set(prev[key]);
+      const merged = [...prev[key]];
+      tokens.forEach((token) => {
+        if (!exists.has(token)) {
+          merged.push(token);
+          exists.add(token);
+        }
+      });
+      return { ...prev, [key]: merged };
+    });
+  }
+
+  function removeTitleRule(
+    key: "domToSubTitles" | "subToDomTitles",
+    index: number,
+  ): void {
+    if (contract.isLocked || contract.agreementStatus === "已终止") {
+      return;
+    }
+    setContract((prev) => ({
+      ...prev,
+      [key]: prev[key].filter((_, i) => i !== index),
+    }));
+  }
+
   async function buildEncryptedVoucher(): Promise<string> {
     if (!password.trim()) {
       throw new Error("请先输入用于加密的密码");
@@ -823,6 +880,8 @@ function App() {
       const fullRows = [
         ["Dom", contract.domName || "未填写"],
         ["Sub", contract.subName || "未填写"],
+        ["Dom 对 Sub 称呼规定", contract.domToSubTitles.join("、") || "未填写"],
+        ["Sub 对 Dom 称呼规定", contract.subToDomTitles.join("、") || "未填写"],
         ["协议状态", contract.agreementStatus],
         ["是否锁定", yesNo(contract.isLocked)],
         ["开始日期", contract.startDate || "未填写"],
@@ -1165,7 +1224,11 @@ function App() {
         <div className="status-line with-seal">
           <p>{statusText}</p>
           {signedVisualState ? (
-            <img className="seal-mark is-signed" src={sealAsset} alt="签约盖章" />
+            <img
+              className="seal-mark is-signed"
+              src={sealAsset}
+              alt="签约盖章"
+            />
           ) : null}
         </div>
       </section>
@@ -1279,6 +1342,156 @@ function App() {
                 contract.isLocked || contract.agreementStatus === "已终止"
               }
             />
+          </label>
+          <label className="full-row">
+            Dom 对 Sub 的称呼规定（多输入标签）
+            <div
+              className={`tag-input-shell ${
+                contract.isLocked || contract.agreementStatus === "已终止"
+                  ? "disabled"
+                  : ""
+              }`}
+              onClick={() => {
+                const input = document.getElementById(
+                  "dom-to-sub-title-input",
+                ) as HTMLInputElement | null;
+                input?.focus();
+              }}
+            >
+              {contract.domToSubTitles.map((title, index) => (
+                <span key={`${title}-${index}`} className="title-tag">
+                  {title}
+                  {contract.isLocked ||
+                  contract.agreementStatus === "已终止" ? null : (
+                    <button
+                      type="button"
+                      className="tag-remove"
+                      onClick={() => removeTitleRule("domToSubTitles", index)}
+                    >
+                      ×
+                    </button>
+                  )}
+                </span>
+              ))}
+              <input
+                id="dom-to-sub-title-input"
+                value={domToSubTitleDraft}
+                onChange={(event) => setDomToSubTitleDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  const triggerKeys = ["Enter", "Tab", ","];
+                  const isChineseComma = event.key === "，";
+                  if (triggerKeys.includes(event.key) || isChineseComma) {
+                    event.preventDefault();
+                    appendTitleRulesFromRaw(
+                      "domToSubTitles",
+                      domToSubTitleDraft,
+                    );
+                    setDomToSubTitleDraft("");
+                  } else if (
+                    event.key === "Backspace" &&
+                    !domToSubTitleDraft &&
+                    contract.domToSubTitles.length > 0
+                  ) {
+                    removeTitleRule(
+                      "domToSubTitles",
+                      contract.domToSubTitles.length - 1,
+                    );
+                  }
+                }}
+                onBlur={() => {
+                  appendTitleRulesFromRaw("domToSubTitles", domToSubTitleDraft);
+                  setDomToSubTitleDraft("");
+                }}
+                onPaste={(event) => {
+                  const pasted = event.clipboardData.getData("text");
+                  if (/[,\n，;；|]/.test(pasted)) {
+                    event.preventDefault();
+                    appendTitleRulesFromRaw("domToSubTitles", pasted);
+                    setDomToSubTitleDraft("");
+                  }
+                }}
+                placeholder="输入称呼后回车，例如：小狗、宠物、宝贝"
+                disabled={
+                  contract.isLocked || contract.agreementStatus === "已终止"
+                }
+                className="tag-inline-input"
+              />
+            </div>
+          </label>
+          <label className="full-row">
+            Sub 对 Dom 的称呼规定（多输入标签）
+            <div
+              className={`tag-input-shell ${
+                contract.isLocked || contract.agreementStatus === "已终止"
+                  ? "disabled"
+                  : ""
+              }`}
+              onClick={() => {
+                const input = document.getElementById(
+                  "sub-to-dom-title-input",
+                ) as HTMLInputElement | null;
+                input?.focus();
+              }}
+            >
+              {contract.subToDomTitles.map((title, index) => (
+                <span key={`${title}-${index}`} className="title-tag">
+                  {title}
+                  {contract.isLocked ||
+                  contract.agreementStatus === "已终止" ? null : (
+                    <button
+                      type="button"
+                      className="tag-remove"
+                      onClick={() => removeTitleRule("subToDomTitles", index)}
+                    >
+                      ×
+                    </button>
+                  )}
+                </span>
+              ))}
+              <input
+                id="sub-to-dom-title-input"
+                value={subToDomTitleDraft}
+                onChange={(event) => setSubToDomTitleDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  const triggerKeys = ["Enter", "Tab", ","];
+                  const isChineseComma = event.key === "，";
+                  if (triggerKeys.includes(event.key) || isChineseComma) {
+                    event.preventDefault();
+                    appendTitleRulesFromRaw(
+                      "subToDomTitles",
+                      subToDomTitleDraft,
+                    );
+                    setSubToDomTitleDraft("");
+                  } else if (
+                    event.key === "Backspace" &&
+                    !subToDomTitleDraft &&
+                    contract.subToDomTitles.length > 0
+                  ) {
+                    removeTitleRule(
+                      "subToDomTitles",
+                      contract.subToDomTitles.length - 1,
+                    );
+                  }
+                }}
+                onBlur={() => {
+                  appendTitleRulesFromRaw("subToDomTitles", subToDomTitleDraft);
+                  setSubToDomTitleDraft("");
+                }}
+                onPaste={(event) => {
+                  const pasted = event.clipboardData.getData("text");
+                  if (/[,\n，;；|]/.test(pasted)) {
+                    event.preventDefault();
+                    appendTitleRulesFromRaw("subToDomTitles", pasted);
+                    setSubToDomTitleDraft("");
+                  }
+                }}
+                placeholder="输入称呼后回车，例如：主人、姐姐"
+                disabled={
+                  contract.isLocked || contract.agreementStatus === "已终止"
+                }
+                className="tag-inline-input"
+              />
+            </div>
           </label>
           <label className="full-row">
             开始日期

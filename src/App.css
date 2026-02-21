@@ -208,6 +208,70 @@ select {
   font-size: 14px;
 }
 
+.tag-input-shell {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 10px;
+  padding: 6px 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  cursor: text;
+}
+
+.tag-input-shell:focus-within {
+  outline: 2px solid rgba(183, 66, 132, 0.16);
+  border-color: var(--accent);
+}
+
+.tag-input-shell.disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.title-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #ffe9f5;
+  border: 1px solid #f2c5de;
+  color: #8f2b63;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.tag-remove {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 0;
+  padding: 0;
+  background: #d86ca5;
+  color: #fff;
+  line-height: 1;
+  font-size: 12px;
+}
+
+.tag-inline-input {
+  border: 0;
+  outline: none;
+  padding: 4px 2px;
+  min-width: 220px;
+  flex: 1;
+  box-shadow: none;
+}
+
+.tag-inline-input:focus {
+  outline: none;
+  border: 0;
+  box-shadow: none;
+}
+
 textarea {
   min-height: 90px;
   resize: vertical;
