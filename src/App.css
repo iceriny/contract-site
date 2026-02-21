@@ -97,7 +97,14 @@ body {
 }
 
 .status-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-weight: 600;
+}
+
+.status-line p {
+  margin: 0;
 }
 
 .grid {
@@ -218,6 +225,7 @@ select:focus {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  align-items: center;
 }
 
 button {
@@ -233,6 +241,146 @@ button {
 button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.sign-btn {
+  position: relative;
+  min-width: 150px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding-right: 48px;
+  overflow: visible;
+  background: linear-gradient(130deg, #d86ca5, #9c3f72);
+  box-shadow: 0 8px 18px rgba(156, 63, 114, 0.28);
+  isolation: isolate;
+}
+
+.sign-btn::after {
+  content: "";
+  position: absolute;
+  inset: -40% -10%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.38) 44%,
+    transparent 76%
+  );
+  transform: translateY(140%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fingerprint-mark {
+  position: absolute;
+  top: -32px;
+  right: -12px;
+  z-index: 2;
+  width: 128px;
+  height: 128px;
+  transform: translateY(0);
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.fingerprint-mark.is-pending {
+  opacity: 0.42;
+  animation: fingerprint-float 2.2s ease-in-out infinite;
+}
+
+.fingerprint-mark.is-signed {
+  opacity: 1;
+  animation: none;
+}
+
+.sign-btn.phase-pressing {
+  transform: translateY(1px) scale(0.99);
+}
+
+.sign-btn.phase-scanning::after {
+  opacity: 1;
+  animation: scan-line 1s linear infinite;
+}
+
+.sign-btn.phase-scanning .fingerprint-mark {
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.18),
+    0 0 12px rgba(255, 255, 255, 0.45);
+  filter: saturate(1.25) brightness(1.06);
+  animation-duration: 0.9s;
+}
+
+.sign-btn.phase-done {
+  background: linear-gradient(130deg, #5baf8e, #2f8e6d);
+  box-shadow: 0 8px 18px rgba(47, 142, 109, 0.28);
+}
+
+.with-seal {
+  position: relative;
+  overflow: visible;
+  min-height: 64px;
+}
+
+.with-seal .seal-mark {
+  position: absolute;
+  top: -26px;
+  right: -18px;
+  pointer-events: none;
+  width: 256px;
+  height: 256px;
+  transform: rotate(-12deg) scale(0.95);
+  filter: drop-shadow(0 6px 12px rgba(138, 23, 49, 0.18));
+}
+
+.with-seal .seal-mark.is-pending {
+  opacity: 0.35;
+  animation: seal-float 2.8s ease-in-out infinite;
+}
+
+.with-seal .seal-mark.is-signed {
+  opacity: 0.92;
+  animation: none;
+}
+
+@keyframes scan-line {
+  from {
+    transform: translateY(140%);
+  }
+  to {
+    transform: translateY(-140%);
+  }
+}
+
+@keyframes seal-drop {
+  from {
+    transform: rotate(-20deg) translateY(-8px) scale(1.08);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(-12deg) translateY(0) scale(0.95);
+    opacity: 0.88;
+  }
+}
+
+@keyframes seal-float {
+  0%,
+  100% {
+    transform: rotate(-12deg) translateY(0) scale(0.95);
+  }
+  50% {
+    transform: rotate(-12deg) translateY(-4px) scale(0.96);
+  }
+}
+
+@keyframes fingerprint-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
 .ghost-btn {

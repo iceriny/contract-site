@@ -3,6 +3,8 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
 import workerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import fingerprintAsset from "./assets/fingerprint.webp";
+import sealAsset from "./assets/seal.webp";
 import { Logo } from "./components/Logo";
 import "./App.css";
 
@@ -10,6 +12,7 @@ GlobalWorkerOptions.workerSrc = workerSrc;
 
 type Choice = "可接受" | "不可接受" | "需讨论";
 type AgreementStatus = "草拟中" | "生效中" | "已终止";
+type SigningPhase = "idle" | "pressing" | "scanning" | "done";
 
 interface ScopeItem {
   id: string;
@@ -532,6 +535,8 @@ function App() {
   const [now, setNow] = useState(new Date());
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [terminateArmed, setTerminateArmed] = useState(false);
+  const [signingPhase, setSigningPhase] = useState<SigningPhase>("idle");
+  const signedVisualState = contract.isLocked || signingPhase === "done";
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -599,6 +604,27 @@ function App() {
       agreementStatus: locked ? "生效中" : prev.agreementStatus,
     }));
     setTerminateArmed(false);
+  }
+
+  async function handleSignContract(): Promise<void> {
+    if (contract.isLocked || contract.agreementStatus === "已终止") {
+      return;
+    }
+    if (signingPhase !== "idle") {
+      return;
+    }
+
+    setSigningPhase("pressing");
+    setStatusText("签约动作识别中：按压确认...");
+    await new Promise((resolve) => window.setTimeout(resolve, 420));
+
+    setSigningPhase("scanning");
+    setStatusText("签约动作识别中：指纹扫描...");
+    await new Promise((resolve) => window.setTimeout(resolve, 1050));
+
+    setLockedState(true);
+    setSigningPhase("done");
+    setStatusText("签约完成，协议已生效并锁定");
   }
 
   function handleRenewal(): void {
@@ -1094,12 +1120,27 @@ function App() {
         <div className="action-row">
           <button
             type="button"
-            onClick={() => setLockedState(true)}
+            className={`sign-btn phase-${signingPhase}`}
+            onClick={() => void handleSignContract()}
             disabled={
-              contract.isLocked || contract.agreementStatus === "已终止"
+              contract.isLocked ||
+              contract.agreementStatus === "已终止" ||
+              signingPhase === "pressing" ||
+              signingPhase === "scanning"
             }
           >
-            锁定并生效
+            <img
+              className={`fingerprint-mark ${signedVisualState ? "is-signed" : "is-pending"}`}
+              src={fingerprintAsset}
+              alt=""
+              aria-hidden
+            />
+            <span>
+              {signingPhase === "pressing" && "按压中..."}
+              {signingPhase === "scanning" && "扫描中..."}
+              {signingPhase === "done" && "签约完成"}
+              {signingPhase === "idle" && "签约"}
+            </span>
           </button>
           <button
             type="button"
@@ -1121,7 +1162,12 @@ function App() {
             {terminateArmed ? "再次确认终止" : "终止协议"}
           </button>
         </div>
-        <p className="status-line">{statusText}</p>
+        <div className="status-line with-seal">
+          <p>{statusText}</p>
+          {signedVisualState ? (
+            <img className="seal-mark is-signed" src={sealAsset} alt="签约盖章" />
+          ) : null}
+        </div>
       </section>
       <section className="contract-card">
         <h2>第一章 · 前提声明</h2>
