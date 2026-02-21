@@ -361,6 +361,212 @@ function createDefaultContractData(): ContractData {
   };
 }
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  return value as Record<string, unknown>;
+}
+
+function asString(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value : fallback;
+}
+
+function asBoolean(value: unknown, fallback = false): boolean {
+  return typeof value === "boolean" ? value : fallback;
+}
+
+function asNonNegativeNumber(value: unknown, fallback = 0): number {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    return fallback;
+  }
+  return value;
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function normalizeChoice(value: unknown, fallback: Choice = "需讨论"): Choice {
+  if (
+    value === "可接受" ||
+    value === "不可接受" ||
+    value === "需讨论"
+  ) {
+    return value;
+  }
+  return fallback;
+}
+
+function normalizeAgreementStatus(
+  value: unknown,
+  fallback: AgreementStatus,
+): AgreementStatus {
+  if (value === "草拟中" || value === "生效中" || value === "已终止") {
+    return value;
+  }
+  return fallback;
+}
+
+function normalizeScopeSections(value: unknown, fallback: ScopeSection[]): ScopeSection[] {
+  if (!Array.isArray(value)) {
+    return fallback;
+  }
+
+  const incomingMap = new Map<ScopeSection["id"], Record<string, unknown>>();
+  value.forEach((item) => {
+    const rec = asRecord(item);
+    if (!rec) {
+      return;
+    }
+    const id = rec?.id;
+    if (
+      id === "powerStructure" ||
+      id === "psychologicalControl" ||
+      id === "lightHumiliation" ||
+      id === "remoteInstructions"
+    ) {
+      incomingMap.set(id, rec);
+    }
+  });
+
+  return fallback.map((defaultSection) => {
+    const incoming = incomingMap.get(defaultSection.id);
+    if (!incoming) {
+      return defaultSection;
+    }
+    const rawItems = Array.isArray(incoming.items) ? incoming.items : [];
+    const normalizedItems: ScopeItem[] = rawItems
+      .map((rawItem) => {
+        const item = asRecord(rawItem);
+        if (!item) {
+          return null;
+        }
+        const text = asString(item.text).trim();
+        if (!text) {
+          return null;
+        }
+        return {
+          id:
+            typeof item.id === "string" && item.id.trim()
+              ? item.id
+              : crypto.randomUUID(),
+          text,
+          choice: normalizeChoice(item.choice),
+        };
+      })
+      .filter((item): item is ScopeItem => item !== null);
+
+    return {
+      ...defaultSection,
+      title: asString(incoming.title, defaultSection.title),
+      description: asString(incoming.description, defaultSection.description),
+      items: normalizedItems.length > 0 ? normalizedItems : defaultSection.items,
+    };
+  });
+}
+
+function normalizeContractData(raw: unknown): ContractData {
+  const defaults = createDefaultContractData();
+  const data = asRecord(raw);
+  if (!data) {
+    return defaults;
+  }
+
+  const legacyMutualTitles = normalizeStringArray(data.mutualTitles);
+  const domToSubTitles = normalizeStringArray(data.domToSubTitles);
+  const subToDomTitles = normalizeStringArray(data.subToDomTitles);
+
+  return {
+    ...defaults,
+    domName: asString(data.domName, defaults.domName),
+    subName: asString(data.subName, defaults.subName),
+    domToSubTitles:
+      domToSubTitles.length > 0 ? domToSubTitles : legacyMutualTitles,
+    subToDomTitles:
+      subToDomTitles.length > 0 ? subToDomTitles : legacyMutualTitles,
+    startDate: asString(data.startDate, defaults.startDate),
+    endDate: asString(data.endDate, defaults.endDate),
+    agreementStatus: normalizeAgreementStatus(
+      data.agreementStatus,
+      defaults.agreementStatus,
+    ),
+    isLocked: asBoolean(data.isLocked, defaults.isLocked),
+    renewalCount: asNonNegativeNumber(data.renewalCount, defaults.renewalCount),
+    adulthoodConfirmed: asBoolean(
+      data.adulthoodConfirmed,
+      defaults.adulthoodConfirmed,
+    ),
+    saneConfirmed: asBoolean(data.saneConfirmed, defaults.saneConfirmed),
+    consentConfirmed: asBoolean(data.consentConfirmed, defaults.consentConfirmed),
+    canTerminateAnytime: asBoolean(
+      data.canTerminateAnytime,
+      defaults.canTerminateAnytime,
+    ),
+    onlineOnlyConfirmed: asBoolean(
+      data.onlineOnlyConfirmed,
+      defaults.onlineOnlyConfirmed,
+    ),
+    noOfflineInterferenceConfirmed: asBoolean(
+      data.noOfflineInterferenceConfirmed,
+      defaults.noOfflineInterferenceConfirmed,
+    ),
+    yellowSafeWord: asString(data.yellowSafeWord, defaults.yellowSafeWord),
+    redSafeWord: asString(data.redSafeWord, defaults.redSafeWord),
+    domCommitNoPsychHarm: asBoolean(
+      data.domCommitNoPsychHarm,
+      defaults.domCommitNoPsychHarm,
+    ),
+    domCommitNoRealThreat: asBoolean(
+      data.domCommitNoRealThreat,
+      defaults.domCommitNoRealThreat,
+    ),
+    domCommitNoIndependenceLoss: asBoolean(
+      data.domCommitNoIndependenceLoss,
+      defaults.domCommitNoIndependenceLoss,
+    ),
+    aftercareDailyReview: asBoolean(
+      data.aftercareDailyReview,
+      defaults.aftercareDailyReview,
+    ),
+    aftercareEmotionCheck: asBoolean(
+      data.aftercareEmotionCheck,
+      defaults.aftercareEmotionCheck,
+    ),
+    aftercareSafetyFirst: asBoolean(
+      data.aftercareSafetyFirst,
+      defaults.aftercareSafetyFirst,
+    ),
+    terminationByEitherParty: asBoolean(
+      data.terminationByEitherParty,
+      defaults.terminationByEitherParty,
+    ),
+    terminationByTrustBreak: asBoolean(
+      data.terminationByTrustBreak,
+      defaults.terminationByTrustBreak,
+    ),
+    terminationByForbiddenViolation: asBoolean(
+      data.terminationByForbiddenViolation,
+      defaults.terminationByForbiddenViolation,
+    ),
+    terminationByTimeout: asBoolean(
+      data.terminationByTimeout,
+      defaults.terminationByTimeout,
+    ),
+    forbiddenItems: normalizeStringArray(data.forbiddenItems).length
+      ? normalizeStringArray(data.forbiddenItems)
+      : defaults.forbiddenItems,
+    scopeSections: normalizeScopeSections(data.scopeSections, defaults.scopeSections),
+    extraNotes: asString(data.extraNotes, defaults.extraNotes),
+  };
+}
+
 interface CustomSelectProps {
   value: Choice;
   onChange: (value: Choice) => void;
@@ -548,19 +754,8 @@ function App() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
-        const parsed = JSON.parse(saved) as ContractData;
-        const legacyMutualTitles = (parsed as { mutualTitles?: string[] })
-          .mutualTitles;
-        setContract({
-          ...createDefaultContractData(),
-          ...parsed,
-          domToSubTitles:
-            parsed.domToSubTitles ??
-            (Array.isArray(legacyMutualTitles) ? legacyMutualTitles : []),
-          subToDomTitles:
-            parsed.subToDomTitles ??
-            (Array.isArray(legacyMutualTitles) ? legacyMutualTitles : []),
-        });
+        const parsed = JSON.parse(saved) as unknown;
+        setContract(normalizeContractData(parsed));
       } catch {
         localStorage.removeItem(STORAGE_KEY);
       }
@@ -1089,9 +1284,9 @@ function App() {
         fromBase64(syncPayload.trim()),
       );
       const plain = await decryptWithPassword(encrypted, password.trim());
-      const parsed = JSON.parse(plain) as ContractData;
-      setContract(parsed);
-      setStatusText("已从同步密文恢复协议");
+      const parsed = JSON.parse(plain) as unknown;
+      setContract(normalizeContractData(parsed));
+      setStatusText("已从同步密文恢复协议（已自动兼容字段变更）");
     } catch {
       setStatusText("同步密文导入失败，请检查密码或内容");
     }
@@ -1146,9 +1341,9 @@ function App() {
       }
       const token = await extractTokenFromPdf(pdfFile, password.trim());
       const plain = await decryptWithPassword(token, password.trim());
-      const parsed = JSON.parse(plain) as ContractData;
-      setContract(parsed);
-      setStatusText("已通过密码解密 PDF 并恢复协议内容");
+      const parsed = JSON.parse(plain) as unknown;
+      setContract(normalizeContractData(parsed));
+      setStatusText("已通过密码解密 PDF 并恢复协议内容（已自动兼容字段变更）");
     } catch {
       setStatusText("PDF 加载失败：密码错误、文件损坏或凭证缺失");
     }
@@ -1366,7 +1561,15 @@ function App() {
                     <button
                       type="button"
                       className="tag-remove"
-                      onClick={() => removeTitleRule("domToSubTitles", index)}
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                      }}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        removeTitleRule("domToSubTitles", index);
+                      }}
                     >
                       ×
                     </button>
@@ -1441,7 +1644,15 @@ function App() {
                     <button
                       type="button"
                       className="tag-remove"
-                      onClick={() => removeTitleRule("subToDomTitles", index)}
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                      }}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        removeTitleRule("subToDomTitles", index);
+                      }}
                     >
                       ×
                     </button>
