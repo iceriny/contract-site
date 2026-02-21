@@ -316,9 +316,24 @@ button:disabled {
   gap: 0;
   padding-right: 48px;
   overflow: visible;
-  background: linear-gradient(130deg, #d86ca5, #9c3f72);
-  box-shadow: 0 8px 18px rgba(156, 63, 114, 0.28);
+  /* background: linear-gradient(130deg, #d86ca5, #9c3f72);*/
+  /* box-shadow: 0 8px 18px rgba(156, 63, 114, 0.28); */
+
+  filter: drop-shadow(0 0px 16px rgb(255, 101, 186));
+
+  color: var(--accent-deep);
+  font-size: 24px;
+
+  background: none;
+  box-shadow: none;
+
   isolation: isolate;
+  transition: all 1s ease;
+}
+.sign-btn:hover {
+  color: var(--accent);
+  transform: scale(1.2);
+  filter: drop-shadow(0 0px 8px rgb(255, 101, 186));
 }
 
 .sign-btn::after {

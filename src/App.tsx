@@ -748,6 +748,7 @@ function App() {
   const [signingPhase, setSigningPhase] = useState<SigningPhase>("idle");
   const [domToSubTitleDraft, setDomToSubTitleDraft] = useState("");
   const [subToDomTitleDraft, setSubToDomTitleDraft] = useState("");
+  const [hasHydratedStorage, setHasHydratedStorage] = useState(false);
   const signedVisualState = contract.isLocked || signingPhase === "done";
 
   useEffect(() => {
@@ -760,11 +761,15 @@ function App() {
         localStorage.removeItem(STORAGE_KEY);
       }
     }
+    setHasHydratedStorage(true);
   }, []);
 
   useEffect(() => {
+    if (!hasHydratedStorage) {
+      return;
+    }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(contract));
-  }, [contract]);
+  }, [contract, hasHydratedStorage]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
