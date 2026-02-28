@@ -392,6 +392,9 @@
                 >
                 <span class="tracking-widest">玩法范畴协定</span>
               </h2>
+              <p class="text-textMuted text-sm mb-4">
+                未写出的玩法, 如果有异议双方应现场协商确认。
+              </p>
               <div class="space-y-6" id="rules-container">
                 <script>
                   const rules = [
@@ -524,37 +527,71 @@
                 </div>
                 <div class="flex-1 space-y-4 relative z-10">
                   <div
-                    class="bg-base/50 p-4 rounded-lg border-l-2 border-warning/50"
+                    class="flex flex-row gap-4 bg-base/50 p-4 rounded-lg border-l-2 border-warning/50"
                   >
-                    <p class="text-warning text-sm mb-2">🟡 黄色安全词</p>
-                    <div class="flex items-center gap-2">
-                      <input
-                        type="text"
-                        id="yellowWord"
-                        class="glowing-input w-32 text-sm border-warning/50 text-warning"
-                        placeholder="输入词语"
-                      />
-                      <span
-                        class="show-on-capture text-warning border-b border-warning/50 pb-0.5"
-                        id="yellowWord-static"
-                      ></span>
+                    <div>
+                      <p class="text-warning text-sm mb-2">🟡 Dom:黄色安全词</p>
+                      <div class="flex items-center gap-2">
+                        <input
+                          type="text"
+                          id="yellowWordDom"
+                          class="glowing-input w-32 text-sm border-warning/50 text-warning"
+                          placeholder="输入词语"
+                        />
+                        <span
+                          class="show-on-capture text-warning border-b border-warning/50 pb-0.5"
+                          id="yellowWordDom-static"
+                        ></span>
+                      </div>
+                    </div>
+                    <div>
+                      <p class="text-warning text-sm mb-2">🟡 Sub:黄色安全词</p>
+                      <div class="flex items-center gap-2">
+                        <input
+                          type="text"
+                          id="yellowWordSub"
+                          class="glowing-input w-32 text-sm border-warning/50 text-warning"
+                          placeholder="输入词语"
+                        />
+                        <span
+                          class="show-on-capture text-warning border-b border-warning/50 pb-0.5"
+                          id="yellowWordSub-static"
+                        ></span>
+                      </div>
                     </div>
                   </div>
                   <div
-                    class="bg-base/50 p-4 rounded-lg border-l-2 border-danger/50"
+                    class="flex flex-row gap-4 bg-base/50 p-4 rounded-lg border-l-2 border-danger/50"
                   >
-                    <p class="text-danger text-sm mb-2">🔴 红色安全词</p>
-                    <div class="flex items-center gap-2">
-                      <input
-                        type="text"
-                        id="redWord"
-                        class="glowing-input w-32 text-sm border-danger/50 text-danger"
-                        placeholder="输入词语"
-                      />
-                      <span
-                        class="show-on-capture text-danger border-b border-danger/50 pb-0.5"
-                        id="redWord-static"
-                      ></span>
+                    <div>
+                      <p class="text-danger text-sm mb-2">🔴 Dom:红色安全词</p>
+                      <div class="flex items-center gap-2">
+                        <input
+                          type="text"
+                          id="redWordDom"
+                          class="glowing-input w-32 text-sm border-danger/50 text-danger"
+                          placeholder="输入词语"
+                        />
+                        <span
+                          class="show-on-capture text-danger border-b border-danger/50 pb-0.5"
+                          id="redWordDom-static"
+                        ></span>
+                      </div>
+                    </div>
+                    <div>
+                      <p class="text-danger text-sm mb-2">🔴 Sub:红色安全词</p>
+                      <div class="flex items-center gap-2">
+                        <input
+                          type="text"
+                          id="redWordSub"
+                          class="glowing-input w-32 text-sm border-danger/50 text-danger"
+                          placeholder="输入词语"
+                        />
+                        <span
+                          class="show-on-capture text-danger border-b border-danger/50 pb-0.5"
+                          id="redWordSub-static"
+                        ></span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -699,8 +736,10 @@
         const fields = [
           "domName",
           "subName",
-          "yellowWord",
-          "redWord",
+          "yellowWordDom",
+          "yellowWordSub",
+          "redWordDom",
+          "redWordSub",
           "startDate",
           "endDate",
         ];
@@ -717,8 +756,10 @@
         const data = {
           domName: document.getElementById("domName").value,
           subName: document.getElementById("subName").value,
-          yellowWord: document.getElementById("yellowWord").value,
-          redWord: document.getElementById("redWord").value,
+          yellowWordDom: document.getElementById("yellowWordDom").value,
+          yellowWordSub: document.getElementById("yellowWordSub").value,
+          redWordDom: document.getElementById("redWordDom").value,
+          redWordSub: document.getElementById("redWordSub").value,
           startDate: document.getElementById("startDate").value,
           endDate: document.getElementById("endDate").value,
           rules: [],
@@ -737,8 +778,12 @@
       function injectData(data) {
         document.getElementById("domName").value = data.domName || "";
         document.getElementById("subName").value = data.subName || "";
-        document.getElementById("yellowWord").value = data.yellowWord || "";
-        document.getElementById("redWord").value = data.redWord || "";
+        document.getElementById("yellowWordDom").value =
+          data.yellowWordDom || "";
+        document.getElementById("yellowWordSub").value =
+          data.yellowWordSub || "";
+        document.getElementById("redWordDom").value = data.redWordDom || "";
+        document.getElementById("redWordSub").value = data.redWordSub || "";
         document.getElementById("startDate").value = data.startDate || "";
         document.getElementById("endDate").value = data.endDate || "";
 
