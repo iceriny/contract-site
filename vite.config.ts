@@ -12,4 +12,12 @@ export default defineConfig({
       "@styles": path.resolve(__dirname, "src/styles"),
     },
   },
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, "index.html"),
+        agreement: path.resolve(__dirname, "agreement/index.html"),
+      },
+    },
+  },
 });
