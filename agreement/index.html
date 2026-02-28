@@ -354,17 +354,11 @@
                   将繁琐的日常管理自动化，帮助 Dom 更好地掌控全局。
                 </p>
                 <p>
-                  3.
-                  <strong class="text-textMain font-normal"
-                    >权力的革命 (Major Challenge)</strong
-                  >：当前 Sub
+                  3.当前 Sub
                   积攒足够积分后，可发起“大夺权”。若挑战成功，双方角色互换。
                 </p>
                 <p>
-                  4.
-                  <strong class="text-textMain font-normal"
-                    >Switch的萌芽 (Minor Bounce)</strong
-                  >：当前 Sub
+                  4.当前 Sub
                   允许发起“任务反弹”，在规则允许范围内体验瞬间的支配权。
                 </p>
 
@@ -378,7 +372,12 @@
                     <li>· 不利用情感依附制造心理伤害</li>
                     <li>· 不剥夺当前 Sub 的现实独立性</li>
                     <li>· 不以现实威胁作为控制手段</li>
-                    <li>· 接受随时到来的被支配的释放</li>
+                    <li>· 每日互动结束后进行关怀与心理安全确认</li>
+                    <li>· Dom 需确认 Sub 情绪稳定</li>
+                    <li>· 出现不适时优先处理现实心理安全</li>
+                    <li>· 任一方主动提出终止即生效</li>
+                    <li>· 出现信任破坏自动终止</li>
+                    <li>· 违反禁止范畴自动终止</li>
                   </ul>
                 </div>
               </div>
@@ -415,34 +414,92 @@
                   ];
                   rules.forEach((rule, idx) => {
                     document.write(`
-                                        <div class="bg-base/30 p-6 rounded-lg border border-white/5 transition-all duration-700 hover:border-primary/30 z-10 relative">
-                                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                                <div class="flex-1">
-                                                    <h3 class="text-base text-textMain mb-1">${rule.title}</h3>
-                                                    <p class="text-xs text-textMuted">${rule.desc}</p>
-                                                </div>
-                                                <div class="flex gap-5 text-sm shrink-0">
-                                                    <label class="flex items-center gap-2 cursor-pointer group">
-                                                        <input type="radio" name="rule${idx}" value="接受" class="custom-radio hide-on-capture">
-                                                        <span class="show-on-capture text-primary hidden group-has-[:checked]:inline">[ √ 接受 ]</span>
-                                                        <span class="show-on-capture text-textMuted hidden group-has-[:not(:checked)]:inline">[ ○ 接受 ]</span>
-                                                        <span class="hide-on-capture group-hover:text-primary transition-colors">可接受</span>
-                                                    </label>
-                                                    <label class="flex items-center gap-2 cursor-pointer group">
-                                                        <input type="radio" name="rule${idx}" value="拒绝" class="custom-radio hide-on-capture">
-                                                        <span class="show-on-capture text-primary hidden group-has-[:checked]:inline">[ √ 拒绝 ]</span>
-                                                        <span class="show-on-capture text-textMuted hidden group-has-[:not(:checked)]:inline">[ ○ 拒绝 ]</span>
-                                                        <span class="hide-on-capture group-hover:text-primary transition-colors">不可接受</span>
-                                                    </label>
-                                                    <label class="flex items-center gap-2 cursor-pointer group">
-                                                        <input type="radio" name="rule${idx}" value="待议" class="custom-radio hide-on-capture">
-                                                        <span class="show-on-capture text-primary hidden group-has-[:checked]:inline">[ √ 待议 ]</span>
-                                                        <span class="show-on-capture text-textMuted hidden group-has-[:not(:checked)]:inline">[ ○ 待议 ]</span>
-                                                        <span class="hide-on-capture group-hover:text-primary transition-colors">需讨论</span>
-                                                    </label>
-                                                </div>
-                                            </div>
+                                    <div
+                                      class="bg-base/30 p-6 rounded-lg border border-white/5 transition-all duration-700 hover:border-primary/30 z-10 relative"
+                                    >
+                                      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                        <div class="flex-1">
+                                          <h3 class="text-base text-textMain mb-1">${rule.title}</h3>
+                                          <p class="text-xs text-textMuted">${rule.desc}</p>
                                         </div>
+                                        <div class="flex gap-5 text-sm shrink-0">
+                                          <!-- 接受 -->
+                                          <label class="flex items-center gap-2 cursor-pointer group">
+                                            <input
+                                              type="radio"
+                                              name="rule${idx}"
+                                              value="接受"
+                                              class="custom-radio hide-on-capture"
+                                            />
+
+                                            <!-- 选中状态：默认 hidden，选中时变 inline -->
+                                            <span
+                                              class="show-on-capture text-primary hidden group-has-[:checked]:inline"
+                                              >[ √ 接受 ]</span
+                                            >
+
+                                            <!-- 未选中状态：默认 inline，选中时变 hidden -->
+                                            <span
+                                              class="show-on-capture text-textMuted inline group-has-[:checked]:hidden"
+                                              >[ ○ 接受 ]</span
+                                            >
+
+                                            <span class="hide-on-capture group-hover:text-primary transition-colors"
+                                              >可接受</span
+                                            >
+                                          </label>
+
+                                          <!-- 拒绝 -->
+                                          <label class="flex items-center gap-2 cursor-pointer group">
+                                            <input
+                                              type="radio"
+                                              name="rule${idx}"
+                                              value="拒绝"
+                                              class="custom-radio hide-on-capture"
+                                            />
+
+                                            <span
+                                              class="show-on-capture text-primary hidden group-has-[:checked]:inline"
+                                              >[ √ 拒绝 ]</span
+                                            >
+
+                                            <span
+                                              class="show-on-capture text-textMuted inline group-has-[:checked]:hidden"
+                                              >[ ○ 拒绝 ]</span
+                                            >
+
+                                            <span class="hide-on-capture group-hover:text-primary transition-colors"
+                                              >不可接受</span
+                                            >
+                                          </label>
+
+                                          <!-- 待议 -->
+                                          <label class="flex items-center gap-2 cursor-pointer group">
+                                            <input
+                                              type="radio"
+                                              name="rule${idx}"
+                                              value="待议"
+                                              class="custom-radio hide-on-capture"
+                                            />
+
+                                            <span
+                                              class="show-on-capture text-primary hidden group-has-[:checked]:inline"
+                                              >[ √ 待议 ]</span
+                                            >
+
+                                            <!-- 修正这里 -->
+                                            <span
+                                              class="show-on-capture text-textMuted inline group-has-[:checked]:hidden"
+                                              >[ ○ 待议 ]</span
+                                            >
+
+                                            <span class="hide-on-capture group-hover:text-primary transition-colors"
+                                              >需讨论</span
+                                            >
+                                          </label>
+                                        </div>
+                                      </div>
+                                    </div>
                                     `);
                   });
                 </script>
@@ -740,16 +797,17 @@
             useCORS: true,
             logging: false,
             onclone: (clonedDoc) => {
-                        // 1. 隐藏 SweetAlert
-                        const swal = clonedDoc.querySelector('.swal2-container');
-                        if (swal) swal.style.display = 'none';
+              // 1. 隐藏 SweetAlert
+              const swal = clonedDoc.querySelector(".swal2-container");
+              if (swal) swal.style.display = "none";
 
-                        // 2. 【核心修复】找到克隆后的容器
-                        const clonedContainer = clonedDoc.getElementById('contract-container');
-                        if (clonedContainer) {
-                            clonedContainer.classList.remove('fade-in-up', 'animate-float');
-                        }
-                    }
+              // 2. 【核心修复】找到克隆后的容器
+              const clonedContainer =
+                clonedDoc.getElementById("contract-container");
+              if (clonedContainer) {
+                clonedContainer.classList.remove("fade-in-up", "animate-float");
+              }
+            },
           });
 
           const imgDataUrl = canvas.toDataURL("image/png", 1.0);
