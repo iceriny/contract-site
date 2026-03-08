@@ -278,7 +278,7 @@
             >
               <p>
                 <span class="text-primary font-normal">协议期限：</span
-                >自双方确认之时起，持续 72 小时（可于到期后重新约定）
+                ><span id="date-show">暂未定</span>
               </p>
               <p>
                 <span class="text-primary font-normal">系统辅助：</span
@@ -640,6 +640,7 @@
                       type="date"
                       id="startDate"
                       class="glowing-input text-xs px-2 py-1 bg-transparent text-primary w-32"
+                      onchange="onStartDateChange(event)"
                     />
                     <span
                       id="startDate-static"
@@ -652,6 +653,7 @@
                       type="date"
                       id="endDate"
                       class="glowing-input text-xs px-2 py-1 bg-transparent text-primary w-32"
+                      onchange="onEndDateChange(event)"
                     />
                     <span
                       id="endDate-static"
@@ -775,7 +777,15 @@
         return data;
       }
 
+      function isEndDateExpired(endDate) {
+        if (!endDate) return false;
+        const endDateTime = new Date(`${endDate}T23:59:59.999`);
+        if (Number.isNaN(endDateTime.getTime())) return false;
+        return new Date() > endDateTime;
+      }
+
       function injectData(data) {
+        const shouldClearSignatures = isEndDateExpired(data.endDate);
         document.getElementById("domName").value = data.domName || "";
         document.getElementById("subName").value = data.subName || "";
         document.getElementById("yellowWordDom").value =
@@ -786,7 +796,6 @@
         document.getElementById("redWordSub").value = data.redWordSub || "";
         document.getElementById("startDate").value = data.startDate || "";
         document.getElementById("endDate").value = data.endDate || "";
-
         if (data.rules && data.rules.length > 0) {
           data.rules.forEach((val, i) => {
             if (val) {
@@ -797,16 +806,18 @@
             }
           });
         }
-        if (data.domSignature) {
+        if (!shouldClearSignatures && data.domSignature) {
           domPad.fromDataURL(data.domSignature);
         } else {
           domPad.clear();
         }
-        if (data.subSignature) {
+        if (!shouldClearSignatures && data.subSignature) {
           subPad.fromDataURL(data.subSignature);
         } else {
           subPad.clear();
         }
+        updateDateShow();
+        return { shouldClearSignatures };
       }
 
       // --- 核心：缔结契约并生成隐写图片 ---
@@ -907,6 +918,33 @@
         }
       }
 
+      function onStartDateChange(e) {
+        const startDate = e.target.value;
+        const endDate = document.getElementById("endDate").value;
+        if (startDate > endDate) {
+          document.getElementById("endDate").value = startDate;
+          document.getElementById("date-show").innerText = `自${startDate}起，止于${startDate}`;
+          return;
+        }
+        document.getElementById("date-show").innerText = `自${startDate}起，止于${endDate}`;
+      }
+      function onEndDateChange(e) {
+        const endDate = e.target.value;
+        const startDate = document.getElementById("startDate").value;
+        if (endDate < startDate) {
+          document.getElementById("startDate").value = endDate;
+          document.getElementById("date-show").innerText = `自${endDate}起，止于${endDate}`;
+          return;
+        }
+        document.getElementById("date-show").innerText = `自${startDate}起，止于${endDate}`;
+      }
+
+      function updateDateShow() {
+        const startDate = document.getElementById("startDate").value;
+        const endDate = document.getElementById("endDate").value;
+        document.getElementById("date-show").innerText = `自${startDate}起，止于${endDate}`;
+      }
+
       // --- 核心：解析导入的图片并提取隐写数据 ---
       document
         .getElementById("importFile")
@@ -924,12 +962,14 @@
               const jsonStr = text.substring(splitIndex + MAGIC_STRING.length);
               const data = JSON.parse(jsonStr);
 
-              injectData(data);
+              const { shouldClearSignatures } = injectData(data);
 
               Swal.fire({
                 icon: "success",
                 title: "记忆注入完成",
-                text: "对方的笔迹与规则已全盘同步。",
+                text: shouldClearSignatures
+                  ? "其他信息已同步，但契约已过期，签名已清空，请重新签名。"
+                  : "对方的笔迹与规则已全盘同步。",
                 background: "#1a1016",
                 color: "#f5e6ec",
                 confirmButtonColor: "#e899b7",
